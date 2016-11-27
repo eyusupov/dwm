@@ -138,6 +138,7 @@ struct Monitor {
 	int by;               /* bar geometry */
 	int mx, my, mw, mh;   /* screen size */
 	int wx, wy, ww, wh;   /* window area  */
+	int px, py; /* mouse pointer coordinates */
 	unsigned int seltags;
 	unsigned int sellt;
 	unsigned int tagset[2];
@@ -1002,6 +1003,10 @@ focusmon(const Arg *arg)
 		return;
 	unfocus(selmon->sel, 0); /* s/1/0/ fixes input focus issues
 					in gedit and anjuta */
+
+	getrootptr(&(selmon->px), &(selmon->py));
+	XWarpPointer(dpy, None, root, 0, 0, 0, 0, m->px, m->py);
+
 	selmon = m;
 	focus(NULL);
 }
@@ -2181,6 +2186,8 @@ updategeom(void)
 					m->my = m->wy = unique[i].y_org;
 					m->mw = m->ww = unique[i].width;
 					m->mh = m->wh = unique[i].height;
+					m->px = m->wx + m->ww / 2;
+					m->py = m->wy + m->wh / 2;
 					updatebarpos(m);
 				}
 		} else {
@@ -2212,6 +2219,8 @@ updategeom(void)
 			dirty = 1;
 			mons->mw = mons->ww = sw;
 			mons->mh = mons->wh = sh;
+			mons->px = mons->wx + mons->ww / 2;
+			mons->py = mons->wy + mons->wh / 2;
 			updatebarpos(mons);
 		}
 	}
