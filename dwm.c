@@ -270,6 +270,7 @@ static int xerror(Display *dpy, XErrorEvent *ee);
 static int xerrordummy(Display *dpy, XErrorEvent *ee);
 static int xerrorstart(Display *dpy, XErrorEvent *ee);
 static void zoom(const Arg *arg);
+static void self_restart(const Arg *arg);
 
 /* variables */
 static Systray *systray = NULL;
@@ -2572,6 +2573,11 @@ zoom(const Arg *arg)
 		if (!c || !(c = nexttiled(c->next)))
 			return;
 	pop(c);
+}
+
+void self_restart(const Arg *arg)
+{
+	execlp("dwm", "dwm", NULL);
 }
 
 int
