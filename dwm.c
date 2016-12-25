@@ -216,6 +216,7 @@ static void movemouse(const Arg *arg);
 static Client *nexttiled(Client *c);
 static void pop(Client *);
 static void propertynotify(XEvent *e);
+static void wmexec(const Arg *arg);
 static void quit(const Arg *arg);
 static Monitor *recttomon(int x, int y, int w, int h);
 static void resize(Client *c, int x, int y, int w, int h, int interact);
@@ -301,6 +302,7 @@ static void (*handler[LASTEvent]) (XEvent *) = {
 };
 static Atom wmatom[WMLast], netatom[NetLast], xatom[XLast];
 static int running = 1;
+static int exec_before_quit = 0;
 static Cur *cursor[CurLast];
 static ClrScheme scheme[SchemeLast];
 static Display *dpy;
@@ -1468,6 +1470,13 @@ quit(const Arg *arg)
 	running = 0;
 }
 
+void
+wmexec(const Arg *arg)
+{
+  exec_before_quit = 1;
+  quit(arg);
+}
+
 Monitor *
 recttomon(int x, int y, int w, int h)
 {
@@ -2597,5 +2606,8 @@ main(int argc, char *argv[])
 	run();
 	cleanup();
 	XCloseDisplay(dpy);
+  if (exec_before_quit) {
+    execlp("herbstluftwm", "herbstluftwm", NULL);
+  }
 	return EXIT_SUCCESS;
 }
