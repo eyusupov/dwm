@@ -1,3 +1,4 @@
+/* vim: set noet ci pi sts=0 sw=4 ts=4 */
 /* See LICENSE file for copyright and license details. */
 
 /* appearance */
@@ -26,15 +27,16 @@ static const char *tags[] = { "1", "2", "3", "4", "5", "F1", "F2", "F3", "F4", "
 
 // Use xprop to find out the class
 static const Rule rules[] = {
-	/* class      instance    title       tags mask     isfloating   monitor */
-	{ "Gimp",     NULL,       NULL,       0,            True,        -1 },
-	{ "Skype",    NULL,       NULL,       1 << 4,       False,       -1 },
-	{ "Pidgin",   NULL,       NULL,       0,            True,        -1 },
-	{ "rdesktop", NULL,       NULL,       1 << 3,       True,        -1 },
-	{ "Firefox",  NULL,       NULL,       1 << 2,       False,       -1 },
-	{ "zoom",     NULL,       NULL,       1 << 6,       False,       -1 },
-	{ "Slack",    NULL,       NULL,       1 << 7,       False,       -1 },
-	{ "Smplayer", NULL,       NULL,       0xff,         False,       -1 },
+	/* class      instance    title  tags mask isfloating   monitor */
+	{ "Gimp",     NULL,       NULL,  0,        True,        -1 },
+	{ "Skype",    NULL,       NULL,  1 << 4,   False,       -1 },
+	{ "Pidgin",   NULL,       NULL,  0,        True,        -1 },
+	{ "rdesktop", NULL,       NULL,  1 << 3,   True,        -1 },
+	{ "PreVim",   NULL,       NULL,  0,        False,       -1 },
+	{ "Firefox",  NULL,       NULL,  1 << 2,   False,       -1 },
+	{ "zoom",     NULL,       NULL,  1 << 6,   False,       -1 },
+	{ "Slack",    NULL,       NULL,  1 << 7,   False,       -1 },
+	{ "smplayer", NULL,       NULL,  0xff,     False,       -1 },
 };
 
 /* layout(s) */
@@ -65,8 +67,6 @@ static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() 
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", normbgcolor, "-nf", normfgcolor, "-sb", selbgcolor, "-sf", selfgcolor, NULL };
 static const char *webviewcmd[] = { "webview_run", "-m", dmenumon, "-fn", dmenufont, "-nb", normbgcolor, "-nf", normfgcolor, "-sb", selbgcolor, "-sf", selfgcolor, NULL };
 
-#include "selfrestart.c"
-
 static Key keys[] = {
     	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_r,      spawn,          {.v = dmenucmd } },
@@ -80,7 +80,7 @@ static Key keys[] = {
 	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
 	{ MODKEY,                       XK_Return, zoom,           {0} },
 	{ MODKEY,                       XK_Tab,    view,           {0} },
-	{ MODKEY,                       XK_q,      killclient,     {0} },
+	{ MODKEY,                       XK_F12,    killclient,     {0} },
 	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
 	{ MODKEY,                       XK_f,      setlayout,      {.v = &layouts[1]} },
 	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[2]} },
@@ -103,7 +103,7 @@ static Key keys[] = {
 	TAGKEYS(                        XK_F4,                     8)
 	TAGKEYS(                        XK_F5,                     9)
   { MODKEY|ShiftMask,             XK_r,      self_restart,   {0} },
-	{ MODKEY|ShiftMask,             XK_q,      quit,           {0} },
+  { MODKEY|ShiftMask,             XK_w,      wmexec,         {0} },
 };
 
 /* button definitions */

@@ -1,3 +1,4 @@
+/* vim: set noet ci pi sts=0 sw=4 ts=4 */
 /* See LICENSE file for copyright and license details.
  *
  * dynamic window manager is designed like any other X client as well. It is
@@ -355,6 +356,7 @@ applyrules(Client *c)
 			if (m)
 				c->mon = m;
 		}
+    break;
 	}
 	if (ch.res_class)
 		XFree(ch.res_class);
@@ -1037,6 +1039,7 @@ focusstack(const Arg *arg)
 	if (c) {
 		focus(c);
 		restack(selmon);
+    XWarpPointer(dpy, None, root, 0, 0, 0, 0, c->x + c->w / 2, c->y + c->h / 2);
 	}
 }
 
