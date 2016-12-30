@@ -34,6 +34,7 @@ static const Rule rules[] = {
 	{ "rdesktop", NULL,       NULL,  1 << 3,   True,        1 },
 	{ "PreVim",   NULL,       NULL,  0,        False,       -1 },
 	{ "Firefox",  NULL,       NULL,  1 << 2,   False,       1 },
+	{ "Telegram", NULL,       NULL,  1 << 5,   False,       0 },
 	{ "zoom",     NULL,       NULL,  1 << 6,   False,       0 },
 	{ "Slack",    NULL,       NULL,  1 << 7,   False,       0 },
 	{ "smplayer", NULL,       NULL,  0xff,     False,       -1 },
