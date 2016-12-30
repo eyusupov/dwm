@@ -28,14 +28,14 @@ static const char *tags[] = { "1", "2", "3", "4", "5", "F1", "F2", "F3", "F4", "
 // Use xprop to find out the class
 static const Rule rules[] = {
 	/* class      instance    title  tags mask isfloating   monitor */
-	{ "Gimp",     NULL,       NULL,  0,        True,        -1 },
-	{ "Skype",    NULL,       NULL,  1 << 4,   False,       -1 },
-	{ "Pidgin",   NULL,       NULL,  0,        True,        -1 },
-	{ "rdesktop", NULL,       NULL,  1 << 3,   True,        -1 },
+	{ "Gimp",     NULL,       NULL,  0,        True,        1 },
+	{ "Skype",    NULL,       NULL,  1 << 4,   False,       0},
+	{ "Pidgin",   NULL,       NULL,  0,        True,        0 },
+	{ "rdesktop", NULL,       NULL,  1 << 3,   True,        1 },
 	{ "PreVim",   NULL,       NULL,  0,        False,       -1 },
-	{ "Firefox",  NULL,       NULL,  1 << 2,   False,       -1 },
-	{ "zoom",     NULL,       NULL,  1 << 6,   False,       -1 },
-	{ "Slack",    NULL,       NULL,  1 << 7,   False,       -1 },
+	{ "Firefox",  NULL,       NULL,  1 << 2,   False,       1 },
+	{ "zoom",     NULL,       NULL,  1 << 6,   False,       0 },
+	{ "Slack",    NULL,       NULL,  1 << 7,   False,       0 },
 	{ "smplayer", NULL,       NULL,  0xff,     False,       -1 },
 };
 
