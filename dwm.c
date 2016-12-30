@@ -355,8 +355,8 @@ applyrules(Client *c)
 			for (m = mons; m && m->num != r->monitor; m = m->next);
 			if (m)
 				c->mon = m;
+      break;
 		}
-    break;
 	}
 	if (ch.res_class)
 		XFree(ch.res_class);
@@ -2610,7 +2610,7 @@ main(int argc, char *argv[])
 	cleanup();
 	XCloseDisplay(dpy);
   if (exec_before_quit) {
-    execlp("herbstluftwm", "herbstluftwm", NULL);
+    execlp("awesome", "awesome", NULL);
   }
 	return EXIT_SUCCESS;
 }
