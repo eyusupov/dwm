@@ -112,6 +112,7 @@ struct Client {
 	int bw, oldbw;
 	unsigned int tags;
 	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen;
+	int prefmon;
 	Client *next;
 	Client *snext;
 	Monitor *mon;
@@ -190,6 +191,7 @@ static void destroynotify(XEvent *e);
 static void detach(Client *c);
 static void detachstack(Client *c);
 static Monitor *dirtomon(int dir);
+static Monitor *numtomon(int num);
 static void drawbar(Monitor *m);
 static void drawbars(void);
 static void enternotify(XEvent *e);
@@ -230,7 +232,7 @@ static void restack(Monitor *m);
 static void run(void);
 static void scan(void);
 static int sendevent(Window w, Atom proto, int mask, long d0, long d1, long d2, long d3, long d4);
-static void sendmon(Client *c, Monitor *m);
+static void sendmon(Client *c, Monitor *m, Bool changetags);
 static void setclientstate(Client *c, long state);
 static void setfocus(Client *c);
 static void setfullscreen(Client *c, int fullscreen);
@@ -352,6 +354,7 @@ applyrules(Client *c)
 		{
 			c->isfloating = r->isfloating;
 			c->tags |= r->tags;
+      c->prefmon = r->monitor;
 			for (m = mons; m && m->num != r->monitor; m = m->next);
 			if (m)
 				c->mon = m;
@@ -596,6 +599,7 @@ clientmessage(XEvent *e)
 				die("fatal: could not malloc() %u bytes\n", sizeof(Client));
 			c->win = cme->data.l[2];
 			c->mon = selmon;
+      c->prefmon = selmon->num;
 			c->next = systray->icons;
 			systray->icons = c;
 			XGetWindowAttributes(dpy, c->win, &wa);
@@ -832,6 +836,17 @@ dirtomon(int dir)
 		for (m = mons; m->next; m = m->next);
 	else
 		for (m = mons; m->next != selmon; m = m->next);
+	return m;
+}
+
+Monitor *
+numtomon(int num)
+{
+	Monitor *m = NULL;
+
+  for (m = mons; m->next && num--; m = m->next) {
+  }
+
 	return m;
 }
 
@@ -1232,9 +1247,11 @@ manage(Window w, XWindowAttributes *wa)
 	updatetitle(c);
 	if (XGetTransientForHint(dpy, w, &trans) && (t = wintoclient(trans))) {
 		c->mon = t->mon;
+    c->prefmon = c->mon->num;
 		c->tags = t->tags;
 	} else {
 		c->mon = selmon;
+		c->prefmon = selmon->num;
 		applyrules(c);
 	}
 	/* geometry */
@@ -1398,7 +1415,7 @@ movemouse(const Arg *arg)
 	} while (ev.type != ButtonRelease);
 	XUngrabPointer(dpy, CurrentTime);
 	if ((m = recttomon(c->x, c->y, c->w, c->h)) != selmon) {
-		sendmon(c, m);
+		sendmon(c, m, True);
 		selmon = m;
 		focus(NULL);
 	}
@@ -1585,7 +1602,7 @@ resizemouse(const Arg *arg)
 	XUngrabPointer(dpy, CurrentTime);
 	while (XCheckMaskEvent(dpy, EnterWindowMask, &ev));
 	if ((m = recttomon(c->x, c->y, c->w, c->h)) != selmon) {
-		sendmon(c, m);
+		sendmon(c, m, True);
 		selmon = m;
 		focus(NULL);
 	}
@@ -1667,7 +1684,7 @@ scan(void)
 }
 
 void
-sendmon(Client *c, Monitor *m)
+sendmon(Client *c, Monitor *m, Bool changetags)
 {
 	if (c->mon == m)
 		return;
@@ -1675,7 +1692,8 @@ sendmon(Client *c, Monitor *m)
 	detach(c);
 	detachstack(c);
 	c->mon = m;
-	c->tags = m->tagset[m->seltags]; /* assign tags of target monitor */
+	if(changetags)
+    c->tags = m->tagset[m->seltags]; /* assign tags of target monitor */
 	attach(c);
 	attachstack(c);
 	focus(NULL);
@@ -1939,7 +1957,7 @@ tagmon(const Arg *arg)
 {
 	if (!selmon->sel || !mons->next)
 		return;
-	sendmon(selmon->sel, dirtomon(arg->i));
+	sendmon(selmon->sel, dirtomon(arg->i), True);
 }
 
 void
@@ -2188,7 +2206,7 @@ updategeom(void)
 				else
 					mons = createmon();
 			}
-			for (i = 0, m = mons; i < nn && m; m = m->next, i++)
+			for (i = 0, m = mons; i < nn && m; m = m->next, i++) {
 				if (i >= n
 				|| (unique[i].x_org != m->mx || unique[i].y_org != m->my
 				    || unique[i].width != m->mw || unique[i].height != m->mh))
@@ -2203,6 +2221,11 @@ updategeom(void)
 					m->py = m->wy + m->wh / 2;
 					updatebarpos(m);
 				}
+      }
+      for (i = 0, m = mons; i < n && m; m = m->next, i++) 
+        for (c = m->clients; c; c = c->next)
+          if (c->prefmon >= n && c->prefmon < nn)
+            sendmon(c, numtomon(c->prefmon), False);
 		} else {
 			/* less monitors available nn < n */
 			for (i = nn; i < n; i++) {
