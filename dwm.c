@@ -113,6 +113,7 @@ struct Client {
 	unsigned int tags;
 	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen;
 	int prefmon;
+  int clicktofocus;
 	Client *next;
 	Client *snext;
 	Monitor *mon;
@@ -162,6 +163,7 @@ typedef struct {
 	unsigned int tags;
 	int isfloating;
 	int monitor;
+  int clicktofocus;
 } Rule;
 
 typedef struct Systray   Systray;
@@ -355,6 +357,7 @@ applyrules(Client *c)
 			c->isfloating = r->isfloating;
 			c->tags |= r->tags;
       c->prefmon = r->monitor;
+      c->clicktofocus = r->clicktofocus;
 			for (m = mons; m && m->num != r->monitor; m = m->next);
 			if (m)
 				c->mon = m;
@@ -954,6 +957,10 @@ enternotify(XEvent *e)
 	if ((ev->mode != NotifyNormal || ev->detail == NotifyInferior) && ev->window != root)
 		return;
 	c = wintoclient(ev->window);
+
+  if (c->clicktofocus)
+    return;
+
 	m = c ? c->mon : wintomon(ev->window);
 	if (m != selmon) {
 		unfocus(selmon->sel, 1);
@@ -1039,16 +1046,16 @@ focusstack(const Arg *arg)
 	if (!selmon->sel)
 		return;
 	if (arg->i > 0) {
-		for (c = selmon->sel->next; c && !ISVISIBLE(c); c = c->next);
+		for (c = selmon->sel->next; c && (!ISVISIBLE(c) || c->clicktofocus); c = c->next);
 		if (!c)
-			for (c = selmon->clients; c && !ISVISIBLE(c); c = c->next);
+			for (c = selmon->clients; c && (!ISVISIBLE(c) || c->clicktofocus); c = c->next);
 	} else {
 		for (i = selmon->clients; i != selmon->sel; i = i->next)
-			if (ISVISIBLE(i))
+			if (ISVISIBLE(i) && !i->clicktofocus)
 				c = i;
 		if (!c)
 			for (; i; i = i->next)
-				if (ISVISIBLE(i))
+				if (ISVISIBLE(i) && !i->clicktofocus)
 					c = i;
 	}
 	if (c) {
