@@ -282,7 +282,7 @@ static void self_restart(const Arg *arg);
 static Systray *systray = NULL;
 static unsigned long systrayorientation = _NET_SYSTEM_TRAY_ORIENTATION_HORZ;
 static const char broken[] = "broken";
-static char stext[256];
+static char stext[1024];
 static int screen;
 static int sw, sh;           /* X display screen geometry width, height */
 static int bh, blw = 0;      /* bar geometry */
@@ -330,6 +330,8 @@ struct Pertag {
 
 /* compile-time check if all tags fit into an unsigned int bit array. */
 struct NumTags { char limitexceeded[LENGTH(tags) > 31 ? -1 : 1]; };
+
+static Clr *colors[LENGTH(colorscheme)];
 
 /* function implementations */
 void
@@ -988,7 +990,7 @@ void
 focus(Client *c)
 {
 	if (!c || !ISVISIBLE(c))
-		for (c = selmon->stack; c && !ISVISIBLE(c); c = c->snext);
+		for (c = selmon->stack; c && (!ISVISIBLE(c) || c->clicktofocus); c = c->snext);
 	/* was if (selmon->sel) */
 	if (selmon->sel && selmon->sel != c)
 		unfocus(selmon->sel, 0);
@@ -1828,6 +1830,7 @@ void
 setup(void)
 {
 	XSetWindowAttributes wa;
+  int i;
 
 	/* clean up any zombies immediately */
 	sigchld(0);
@@ -1873,6 +1876,11 @@ setup(void)
 	scheme[SchemeSel].border = drw_clr_create(drw, selbordercolor);
 	scheme[SchemeSel].bg = drw_clr_create(drw, selbgcolor);
 	scheme[SchemeSel].fg = drw_clr_create(drw, selfgcolor);
+  /* init colors */
+  for (i = 0; i < LENGTH(colors); i++) {
+    colors[i] = drw_clr_create(drw, colorscheme[i]);
+  }
+  drw_setcolors(drw, colors);
 	/* init system tray */
 	updatesystray();
 	/* init bars */

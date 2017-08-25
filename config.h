@@ -6,6 +6,27 @@ static const char *fonts[] = {
     "xft:Monospace:pixelsize=11:antialias=true:hinting=true",
     "xft:FontAwesome:pixelsize=11:antialias=true:hinting=true",
 };
+
+// Solarized
+static const char *colorscheme[] = {
+    "#073642", // black dark
+    "#dc322f", // red dark
+    "#859900", // green dark
+    "#b58900", // yellow dark
+    "#268bd2", // blue dark
+    "#d33682", // magenta dark
+    "#2aa198", // cyan dark
+    "#eee8d5", // white dark
+    "#002b36", // black light
+    "#cb4b16", // red light
+    "#586e75", // green light
+    "#657b83", // yellow light
+    "#839496", // blue light
+    "#6c71c4", // magenta light
+    "#93a1a1", // cyan light
+    "#fdf6e3"  // white light
+};
+
 static const char dmenufont[] = "xft:Monospace:pixelsize=11:antialias=true:hinting=true";
 static const char normbordercolor[] = "#444444";
 static const char normbgcolor[]     = "#222222";

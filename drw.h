@@ -33,6 +33,7 @@ typedef struct {
 	Drawable drawable;
 	GC gc;
 	ClrScheme *scheme;
+  Clr **colors;
 	size_t fontcount;
 	Fnt *fonts[DRW_FONT_CACHE_SIZE];
 } Drw;
@@ -65,6 +66,7 @@ void drw_cur_free(Drw *, Cur *);
 /* Drawing context manipulation */
 void drw_setfont(Drw *, Fnt *);
 void drw_setscheme(Drw *, ClrScheme *);
+void drw_setcolors(Drw *, Clr **);
 
 /* Drawing functions */
 void drw_rect(Drw *, int, int, unsigned int, unsigned int, int, int, int);

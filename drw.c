@@ -207,6 +207,12 @@ drw_setscheme(Drw *drw, ClrScheme *scheme)
 }
 
 void
+drw_setcolors(Drw *drw, Clr **colors)
+{
+	drw->colors = colors;
+}
+
+void
 drw_rect(Drw *drw, int x, int y, unsigned int w, unsigned int h, int filled, int empty, int invert)
 {
 	if (!drw->scheme)
@@ -221,6 +227,8 @@ drw_rect(Drw *drw, int x, int y, unsigned int w, unsigned int h, int filled, int
 int
 drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, const char *text, int invert)
 {
+  enum { Text, ESC, CSI } state = Text;
+  ClrScheme scheme;
 	char buf[1024];
 	int tx, ty, th;
 	Extnts tex;
@@ -236,14 +244,20 @@ drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, const char *tex
 	XftResult result;
 	int charexists = 0;
 
+	size_t ncodes = 0, k;
+	int lastcode = 0;
+  int codes[256];
+
 	if (!drw->scheme || !drw->fontcount)
 		return 0;
+
+  memcpy(&scheme, drw->scheme, sizeof(ClrScheme));
 
 	if (!(render = x || y || w || h)) {
 		w = ~w;
 	} else {
 		XSetForeground(drw->dpy, drw->gc, invert ?
-		               drw->scheme->fg->pix : drw->scheme->bg->pix);
+		               scheme.fg->pix : scheme.bg->pix);
 		XFillRectangle(drw->dpy, drw->drawable, drw->gc, x, y, w, h);
 		d = XftDrawCreate(drw->dpy, drw->drawable,
 		                  DefaultVisual(drw->dpy, drw->screen),
@@ -257,23 +271,68 @@ drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, const char *tex
 		nextfont = NULL;
 		while (*text) {
 			utf8charlen = utf8decode(text, &utf8codepoint, UTF_SIZ);
-			for (i = 0; i < drw->fontcount; i++) {
-				charexists = charexists || XftCharExists(drw->dpy, drw->fonts[i]->xfont, utf8codepoint);
-				if (charexists) {
-					if (drw->fonts[i] == curfont) {
-						utf8strlen += utf8charlen;
-						text += utf8charlen;
-					} else {
-						nextfont = drw->fonts[i];
-					}
-					break;
-				}
-			}
 
-			if (!charexists || (nextfont && nextfont != curfont))
-				break;
-			else
-				charexists = 0;
+      if (state == Text && utf8codepoint == 0x1b) {
+        state = ESC;
+        text += utf8charlen;
+        break;
+      }
+      if (state == ESC) {
+        if (utf8codepoint == 0x5b) {
+          state = CSI;
+        } else {
+          state = Text;
+        }
+        text += utf8charlen;
+        continue;
+      }
+      if (state == CSI) {
+        text += utf8charlen;
+        if (utf8codepoint >= 0x30 && utf8codepoint <= 0x39) {
+          lastcode = lastcode * 10 + utf8codepoint - 0x30;
+        } else if (utf8codepoint == 0x3b) {
+          codes[ncodes++] = lastcode;
+          lastcode = 0;
+        } else if (utf8codepoint == 0x6d) {
+          codes[ncodes++] = lastcode;
+          for (k = 0; k < ncodes; k++) {
+            lastcode = codes[k];
+            if (lastcode >= 30 && lastcode <= 37) {
+              scheme.fg = drw->colors[lastcode - 30];
+            }
+            if (lastcode >= 40 && lastcode <= 47) {
+              scheme.bg = drw->colors[lastcode - 40];
+            }
+            if (lastcode == 0) {
+              memcpy(&scheme, drw->scheme, sizeof(ClrScheme));
+            }
+          }
+          lastcode = 0;
+          ncodes = 0;
+          utf8str = text;
+          state = Text;
+        }
+      }
+      
+      if (state == Text) {
+        for (i = 0; i < drw->fontcount; i++) {
+          charexists = charexists || XftCharExists(drw->dpy, drw->fonts[i]->xfont, utf8codepoint);
+          if (charexists) {
+            if (drw->fonts[i] == curfont) {
+              utf8strlen += utf8charlen;
+              text += utf8charlen;
+            } else {
+              nextfont = drw->fonts[i];
+            }
+            break;
+          }
+        }
+
+        if (!charexists || (nextfont && nextfont != curfont))
+          break;
+        else
+          charexists = 0;
+      }
 		}
 
 		if (utf8strlen) {
@@ -292,7 +351,7 @@ drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, const char *tex
 					th = curfont->ascent + curfont->descent;
 					ty = y + (h / 2) - (th / 2) + curfont->ascent;
 					tx = x + (h / 2);
-					XftDrawStringUtf8(d, invert ? &drw->scheme->bg->rgb : &drw->scheme->fg->rgb, curfont->xfont, tx, ty, (XftChar8 *)buf, len);
+					XftDrawStringUtf8(d, invert ? &scheme.bg->rgb : &scheme.fg->rgb, curfont->xfont, tx, ty, (XftChar8 *)buf, len);
 				}
 				x += tex.w;
 				w -= tex.w;
@@ -304,7 +363,7 @@ drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, const char *tex
 		} else if (nextfont) {
 			charexists = 0;
 			curfont = nextfont;
-		} else {
+		} else if (state == Text) {
 			/* Regardless of whether or not a fallback font is found, the
 			 * character must be drawn.
 			 */
