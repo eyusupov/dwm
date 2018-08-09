@@ -275,6 +275,10 @@ static int xerror(Display *dpy, XErrorEvent *ee);
 static int xerrordummy(Display *dpy, XErrorEvent *ee);
 static int xerrorstart(Display *dpy, XErrorEvent *ee);
 static void zoom(const Arg *arg);
+static void scaleleft(const Arg *arg);
+static void scaleright(const Arg *arg);
+static void scaleup(const Arg *arg);
+static void scaledown(const Arg *arg);
 static void self_restart(const Arg *arg);
 
 /* variables */
@@ -2631,6 +2635,38 @@ zoom(const Arg *arg)
 		if (!c || !(c = nexttiled(c->next)))
 			return;
 	pop(c);
+}
+
+void
+scaleleft(const Arg *arg)
+{
+	Client *c = selmon->sel;
+  if (!c->isfloating) togglefloating(NULL);
+  resizeclient(c, c->x - selmon->mw / scaleconst, c->y, c->w + selmon->mw / scaleconst, c->h);
+}
+
+void
+scaleright(const Arg *arg)
+{
+	Client *c = selmon->sel;
+  if (!c->isfloating) togglefloating(NULL);
+  resizeclient(c, c->x + selmon->mw / scaleconst, c->y, c->w - selmon->mw / scaleconst, c->h);
+}
+
+void
+scaleup(const Arg *arg)
+{
+	Client *c = selmon->sel;
+  if (!c->isfloating) togglefloating(NULL);
+  resizeclient(c, c->x, c->y - selmon->mh / scaleconst, c->w, c->h + selmon->mh / scaleconst);
+}
+
+void
+scaledown(const Arg *arg)
+{
+	Client *c = selmon->sel;
+  if (!c->isfloating) togglefloating(NULL);
+  resizeclient(c, c->x, c->y + selmon->mh / scaleconst, c->w, c->h - selmon->mh / scaleconst);
 }
 
 void self_restart(const Arg *arg)
