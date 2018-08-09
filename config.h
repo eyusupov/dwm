@@ -3,8 +3,8 @@
 
 /* appearance */
 static const char *fonts[] = {
-    "xft:Monospace:pixelsize=11:antialias=true:hinting=true",
-    "xft:FontAwesome:pixelsize=11:antialias=true:hinting=true",
+    "xft:Monospace:pixelsize=14:antialias=true:hinting=true",
+    "xft:FontAwesome:pixelsize=14:antialias=true:hinting=true",
 };
 
 // Solarized
@@ -27,7 +27,8 @@ static const char *colorscheme[] = {
     "#fdf6e3"  // white light
 };
 
-static const char dmenufont[] = "xft:Monospace:pixelsize=11:antialias=true:hinting=true";
+static const unsigned int scaleconst = 20;
+static const char dmenufont[] = "xft:Monospace:pixelsize=14:antialias=true:hinting=true";
 static const char normbordercolor[] = "#444444";
 static const char normbgcolor[]     = "#222222";
 static const char normfgcolor[]     = "#bbbbbb";
