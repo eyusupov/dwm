@@ -163,7 +163,6 @@ typedef struct {
 	unsigned int tags;
 	int isfloating;
 	int monitor;
-  int clicktofocus;
 } Rule;
 
 typedef struct Systray   Systray;
@@ -359,7 +358,7 @@ applyrules(Client *c)
 			c->isfloating = r->isfloating;
 			c->tags |= r->tags;
       c->prefmon = r->monitor;
-      c->clicktofocus = r->clicktofocus;
+      c->clicktofocus = 0;
 			for (m = mons; m && m->num != r->monitor; m = m->next);
 			if (m)
 				c->mon = m;
@@ -2032,6 +2031,14 @@ togglefloating(const Arg *arg)
 		resize(selmon->sel, selmon->sel->x, selmon->sel->y,
 		       selmon->sel->w, selmon->sel->h, 0);
 	arrange(selmon);
+}
+
+void
+toggleclicktofocus(const Arg *arg)
+{
+  if (!selmon->sel)
+    return;
+  selmon->sel->clicktofocus = 1 - selmon->sel->clicktofocus;
 }
 
 void
