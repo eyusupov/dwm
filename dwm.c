@@ -106,7 +106,7 @@ typedef struct Client Client;
 struct Client {
 	char name[256];
 	float mina, maxa;
-	int x, y, w, h;
+  int x, y, w, h, barx, barw;
 	int oldx, oldy, oldw, oldh;
 	int basew, baseh, incw, inch, maxw, maxh, minw, minh;
 	int bw, oldbw;
@@ -153,7 +153,8 @@ struct Monitor {
 	Monitor *next;
 	Window barwin;
 	const Layout *lt[2];
-	Pertag *pertag;
+	int titlebarstart;
+  Pertag *pertag;
 };
 
 typedef struct {
@@ -275,6 +276,7 @@ static int xerror(Display *dpy, XErrorEvent *ee);
 static int xerrordummy(Display *dpy, XErrorEvent *ee);
 static int xerrorstart(Display *dpy, XErrorEvent *ee);
 static void zoom(const Arg *arg);
+static void focusonclick(const Arg *arg);
 static void scaleleft(const Arg *arg);
 static void scaleright(const Arg *arg);
 static void scaleup(const Arg *arg);
@@ -504,10 +506,12 @@ buttonpress(XEvent *e)
 			arg.ui = 1 << i;
 		} else if (ev->x < x + blw)
 			click = ClkLtSymbol;
-		else if (ev->x > selmon->ww - TEXTW(stext))
+		else if(ev->x > selmon->titlebarstart)
 			click = ClkStatusText;
-		else
+		else {
+			arg.ui = ev->x;
 			click = ClkWinTitle;
+    }
 	} else if ((c = wintoclient(ev->window))) {
 		focus(c);
 		click = ClkClientWin;
@@ -515,7 +519,7 @@ buttonpress(XEvent *e)
 	for (i = 0; i < LENGTH(buttons); i++)
 		if (click == buttons[i].click && buttons[i].func && buttons[i].button == ev->button
 		&& CLEANMASK(buttons[i].mask) == CLEANMASK(ev->state))
-			buttons[i].func(click == ClkTagBar && buttons[i].arg.i == 0 ? &arg : &buttons[i].arg);
+			buttons[i].func((click == ClkTagBar || click == ClkWinTitle) && buttons[i].arg.i == 0 ? &arg : &buttons[i].arg);
 }
 
 void
@@ -861,9 +865,10 @@ numtomon(int num)
 void
 drawbar(Monitor *m)
 {
-	int x, xx, w, dx, tw, mw;
+	int x, xx, dx, w, ow, tw, mw = 0, a = 0, s = 0;
+	char posbuf[10];
 	unsigned int i, occ = 0, urg = 0, n = 0, extra = 0;
-	Client *c;
+	Client *c, *firstvis, *lastvis = NULL;
 
 	dx = (drw->fonts[0]->ascent + drw->fonts[0]->descent + 2) / 4;
 	resizebarwin(m);
@@ -899,6 +904,7 @@ drawbar(Monitor *m)
 			x = xx;
 			w = m->ww - xx;
 		}
+    m->titlebarstart = x;
 		drw_text(drw, x, 0, w, bh, stext, 0);
 	} else
 		x = m->ww;
@@ -927,6 +933,8 @@ drawbar(Monitor *m)
 				xx = x + w;
 				tw = TEXTW(c->name);
 				w = MIN(m->sel == c ? w : mw, tw);
+        c->barx = x;
+        c->barw = w;
 
 				drw_setscheme(drw, m->sel == c ? &scheme[SchemeSel] : &scheme[SchemeNorm]);
 				drw_text(drw, x, 0, w, bh, c->name, 0);
@@ -1013,6 +1021,18 @@ focus(Client *c)
 	}
 	selmon->sel = c;
 	drawbars();
+}
+
+void
+focusonclick(const Arg *arg)
+{
+  Client *c;
+  for (c = selmon->clients; c && ISVISIBLE(c); c = c->next) {
+    if ((c->barx <= arg->ui) && (arg->ui <= c->barx + c->barw)) {
+      pop(c);
+      return;
+    }
+  }
 }
 
 /* there are some broken focus acquiring clients */
